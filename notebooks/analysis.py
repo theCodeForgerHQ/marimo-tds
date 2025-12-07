@@ -3,14 +3,14 @@ import marimo
 
 app = marimo.App()
 
-
+# Cell 1 → produces slider widget → consumed by Cell 2
 @app.cell
 def _(mo):
     slider = mo.ui.slider(1, 100, 10)
     slider
     return slider
 
-
+# Cell 2 → consumes slider → produces x, y, z → consumed by Cell 3
 @app.cell
 def _(slider):
     x = slider.value
@@ -19,7 +19,7 @@ def _(slider):
     (x, y, z)
     return x, y, z
 
-
+# Cell 3 → consumes x, y, z → produces dynamic markdown
 @app.cell
 def _(mo, x, y, z):
     mo.md(f"""
