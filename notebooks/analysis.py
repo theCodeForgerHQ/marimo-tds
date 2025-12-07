@@ -1,31 +1,83 @@
-# 23f2004076@ds.study.iitm.ac.in
+# -----------------------------------------------------------
+# Author: 23f2004076@ds.study.iitm.ac.in  (email as comment)
+# This Marimo notebook demonstrates interactivity, variable
+# dependencies, dynamic markdown, and documented data flow.
+# -----------------------------------------------------------
+
 import marimo
 
 app = marimo.App()
 
-# Cell 1 → produces slider widget → consumed by Cell 2
+# -----------------------------------------------------------
+# CELL 1: Imports and Dataset
+# Data flow:
+#   - Provides `df` used by later cells
+# -----------------------------------------------------------
 @app.cell
-def _(mo):
-    slider = mo.ui.slider(1, 100, 10)
-    slider
-    return slider
+def cell1():
+    import pandas as pd
 
-# Cell 2 → consumes slider → produces x, y, z → consumed by Cell 3
-@app.cell
-def _(slider):
-    x = slider.value
-    y = x * 2
-    z = x ** 0.5
-    (x, y, z)
-    return x, y, z
+    # Simple synthetic dataset
+    df = pd.DataFrame({
+        "x": range(1, 101),
+        "y": [v**0.5 for v in range(1, 101)]
+    })
 
-# Cell 3 → consumes x, y, z → produces dynamic markdown
+    df.head()
+    return df
+
+
+# -----------------------------------------------------------
+# CELL 2: Slider widget
+# Data flow:
+#   - Creates `point` used by Cell 3 and Cell 4
+# -----------------------------------------------------------
 @app.cell
-def _(mo, x, y, z):
+def cell2():
+    import marimo as mo
+
+    point = mo.ui.slider(start=1, stop=100, value=20, label="Select X value")
+    point
+    return point
+
+
+# -----------------------------------------------------------
+# CELL 3: Computation dependent on slider & dataset
+# Data flow:
+#   - Uses `df` and `point` to compute a derived value
+# -----------------------------------------------------------
+@app.cell
+def cell3(df, point):
+    selected_x = point.value
+    selected_y = df.loc[df["x"] == selected_x, "y"].iloc[0]
+
+    selected_x, selected_y
+    return selected_x, selected_y
+
+
+# -----------------------------------------------------------
+# CELL 4: Dynamic Markdown Output
+# Data flow:
+#   - Reads from Cell 3 and reacts to slider changes
+# -----------------------------------------------------------
+@app.cell
+def cell4(selected_x, selected_y):
+    import marimo as mo
+
     mo.md(f"""
-    # Interactive Data Summary
-    **Slider Value:** {x}  
-    **Doubled Value:** {y}  
-    **Square Root:** {z:.3f}
+    ## 📊 Dynamic Value Display
+
+    You selected **X = {selected_x}**
+
+    Corresponding **Y = √X = {selected_y:.3f}**
+
+    This Markdown updates *automatically* based on slider position.
     """)
     return
+
+
+# -----------------------------------------------------------
+# Run app
+# -----------------------------------------------------------
+if __name__ == "__main__":
+    app.run()
